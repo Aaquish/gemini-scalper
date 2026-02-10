@@ -10,7 +10,7 @@ import streamlit as st
 # --- 1. SETUP THE BRAIN ---
 def get_gemini_llm(api_key):
     return ChatGoogleGenerativeAI(
-        model="gemini-pro",
+        model="gemini-1.5-flash",
         verbose=True,
         temperature=0.1, # Low temperature = factual, not creative
         google_api_key=api_key
