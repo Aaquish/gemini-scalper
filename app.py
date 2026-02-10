@@ -49,3 +49,5 @@ if st.button("🚀 SCAN MARKETS NOW"):
             st.markdown(result)
         except Exception as e:
             st.error(f"Execution Error: {str(e)}")
+
+# Force rebuild 1
