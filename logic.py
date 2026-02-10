@@ -1,4 +1,5 @@
 import os
+import time
 import feedparser
 import requests
 from crewai import Agent, Task, Crew, Process
@@ -10,7 +11,8 @@ import streamlit as st
 # --- 1. SETUP THE BRAIN ---
 def get_gemini_llm(api_key):
     return ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash", # UPDATED TO YOUR AVAILABLE MODEL
+        # We use 2.0 Flash because it is stable and listed in your diagnostic
+        model="gemini-2.0-flash", 
         verbose=True,
         temperature=0.1,
         google_api_key=api_key
@@ -100,9 +102,11 @@ def create_crew(api_key):
         context=[task_scan]
     )
 
+    # --- CRITICAL UPDATE: MAX RPM ---
     return Crew(
         agents=[scanner, analyst],
         tasks=[task_scan, task_analyze],
         process=Process.sequential,
-        verbose=True
+        verbose=True,
+        max_rpm=4 # LIMITS TO 4 REQUESTS PER MINUTE TO PREVENT CRASHES
     )
