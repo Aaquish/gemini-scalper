@@ -1,28 +1,44 @@
 import streamlit as st
-import google.generativeai as genai
+from logic import create_crew
 
-st.title("🛠️ GEMINI DIAGNOSTIC TOOL")
+st.set_page_config(page_title="GEMINI SCALPER", page_icon="📈", layout="wide")
 
-# Get API Key
+st.markdown("""
+<style>
+    .stApp {
+        background-color: #000000;
+        color: #00FF00;
+    }
+    .stButton>button {
+        color: #000000;
+        background-color: #00FF00;
+        border: none;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+st.title("💸 GEMINI MARKET SCALPER")
+st.subheader("Powered by Gemini 2.5 Flash")
+
+# Secure API Key Access
 try:
     api_key = st.secrets["GOOGLE_API_KEY"]
-    genai.configure(api_key=api_key)
-    st.success("API Key Found")
 except:
-    st.error("No API Key found in Secrets!")
-    st.stop()
+    # Fallback for local testing
+    api_key = st.text_input("Enter Google API Key", type="password")
 
-if st.button("LIST AVAILABLE MODELS"):
-    try:
-        st.write("Contacting Google API...")
-        models = genai.list_models()
-        found = False
-        for m in models:
-            if 'generateContent' in m.supported_generation_methods:
-                st.code(f"Model Name: {m.name}")
-                found = True
-        
-        if not found:
-            st.error("No text generation models found! Check your API Key permissions.")
-    except Exception as e:
-        st.error(f"Error: {e}")
+if st.button("🚀 SCAN MARKETS NOW"):
+    if not api_key:
+        st.error("API Key missing! Check Streamlit Secrets.")
+        st.stop()
+    
+    with st.spinner('🤖 AGENTS DEPLOYED... SCANNING GLOBAL FEEDS...'):
+        try:
+            crew = create_crew(api_key)
+            result = crew.kickoff()
+            
+            st.success("✅ INTELLIGENCE ACQUIRED")
+            st.markdown("---")
+            st.markdown(result)
+        except Exception as e:
+            st.error(f"Execution Error: {str(e)}")
