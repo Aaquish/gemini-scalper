@@ -1,0 +1,8 @@
+crewai
+langchain_google_genai
+streamlit
+duckduckgo-search
+feedparser
+beautifulsoup4
+requests
+python-dotenv
