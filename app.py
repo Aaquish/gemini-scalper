@@ -1,53 +1,28 @@
 import streamlit as st
-from logic import create_crew
+import google.generativeai as genai
 
-# Page Config
-st.set_page_config(page_title="GEMINI SCALPER", page_icon="📈", layout="wide")
+st.title("🛠️ GEMINI DIAGNOSTIC TOOL")
 
-# Custom CSS for "Hacker Mode"
-st.markdown("""
-<style>
-    .stApp {
-        background-color: #000000;
-        color: #00FF00;
-    }
-    .stButton>button {
-        color: #000000;
-        background-color: #00FF00;
-        border: none;
-    }
-</style>
-""", unsafe_allow_html=True)
+# Get API Key
+try:
+    api_key = st.secrets["GOOGLE_API_KEY"]
+    genai.configure(api_key=api_key)
+    st.success("API Key Found")
+except:
+    st.error("No API Key found in Secrets!")
+    st.stop()
 
-st.title("💸 GEMINI MARKET SCALPER")
-st.subheader("Powered by Gemini 1.5 Pro & CrewAI")
-
-# sidebar for API key security
-with st.sidebar:
-    st.header("🔒 Secure Access")
-    # Try to load from secrets, otherwise ask user
+if st.button("LIST AVAILABLE MODELS"):
     try:
-        api_key = st.secrets["GOOGLE_API_KEY"]
-        st.success("API Key Loaded from Cloud Secrets")
-    except:
-        api_key = st.text_input("Enter Google API Key", type="password")
-
-if st.button("🚀 SCAN MARKETS NOW"):
-    if not api_key:
-        st.error("Please enter your API Key first!")
-        st.stop()
-    
-    with st.spinner('🤖 AGENTS DEPLOYED... SCANNING GLOBAL FEEDS...'):
-        try:
-            # Initialize the Crew
-            crew = create_crew(api_key)
-            # Execute
-            result = crew.kickoff()
-            
-            st.success("✅ INTELLIGENCE ACQUIRED")
-            st.markdown("---")
-            st.markdown(result)
-        except Exception as e:
-            st.error(f"Execution Error: {str(e)}")
-
-# Force rebuild 1
+        st.write("Contacting Google API...")
+        models = genai.list_models()
+        found = False
+        for m in models:
+            if 'generateContent' in m.supported_generation_methods:
+                st.code(f"Model Name: {m.name}")
+                found = True
+        
+        if not found:
+            st.error("No text generation models found! Check your API Key permissions.")
+    except Exception as e:
+        st.error(f"Error: {e}")
