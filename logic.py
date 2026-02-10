@@ -10,13 +10,13 @@ import streamlit as st
 # --- 1. SETUP THE BRAIN ---
 def get_gemini_llm(api_key):
     return ChatGoogleGenerativeAI(
-        model="gemini-1.5-flash-latest",
+        model="gemini-2.5-flash", # UPDATED TO YOUR AVAILABLE MODEL
         verbose=True,
-        temperature=0.1, # Low temperature = factual, not creative
+        temperature=0.1,
         google_api_key=api_key
     )
 
-# --- 2. THE TOOLS (The Eyes & Ears) ---
+# --- 2. THE TOOLS ---
 
 @tool("RSS Speed Scraper")
 def scrape_rss_feeds(dummy_input: str):
@@ -34,7 +34,7 @@ def scrape_rss_feeds(dummy_input: str):
     for url in feeds:
         try:
             feed = feedparser.parse(url)
-            for entry in feed.entries[:3]: # Top 3 from each to keep it fast
+            for entry in feed.entries[:3]:
                 news_dump.append(f"SOURCE: RSS | TITLE: {entry.title} | LINK: {entry.link}")
         except:
             continue
@@ -43,20 +43,17 @@ def scrape_rss_feeds(dummy_input: str):
 @tool("Social Sentiment Dragnet")
 def search_social_media(query: str):
     """
-    Searches Reddit and X (Twitter) for specific keywords using search operators.
-    Useful for finding rumors and retail sentiment.
+    Searches Reddit and X (Twitter) for specific keywords.
     """
     search = DuckDuckGoSearchRun()
-    # We force the search to look at specific sites for the last 24h
     social_query = f"{query} site:reddit.com OR site:twitter.com OR site:threads.net"
     return search.run(social_query)
 
-# --- 3. THE AGENTS (The Team) ---
+# --- 3. THE CREW ---
 
 def create_crew(api_key):
     llm = get_gemini_llm(api_key)
 
-    # Agent 1: The Hunter (Finds the data)
     scanner = Agent(
         role='Financial Intelligence Officer',
         goal='Gather raw news from RSS feeds and Social Media immediately.',
@@ -67,7 +64,6 @@ def create_crew(api_key):
         allow_delegation=False
     )
 
-    # Agent 2: The Analyst (Filters & Decides)
     analyst = Agent(
         role='Senior Market Strategist',
         goal='Filter noise, identify the single most important trade, and provide a signal.',
@@ -77,18 +73,16 @@ def create_crew(api_key):
         allow_delegation=False
     )
 
-    # --- 4. THE TASKS (The Mission) ---
-
     task_scan = Task(
-        description='1. Run the "RSS Speed Scraper" to get official news. 2. Run the "Social Sentiment Dragnet" for "crypto" and "stock market". Compile the raw list.',
-        expected_output='A raw text list of headlines from RSS and Social Media.',
+        description='1. Run the "RSS Speed Scraper". 2. Run the "Social Sentiment Dragnet" for "crypto" and "stock market". Compile the raw list.',
+        expected_output='A raw text list of headlines.',
         agent=scanner
     )
 
     task_analyze = Task(
         description="""
         Analyze the raw news.
-        1. STRIP out duplicates and non-financial news.
+        1. STRIP out duplicates.
         2. PICK the Top 3 stories with highest market impact.
         3. For the #1 Story, generate a TRADING SIGNAL.
         
